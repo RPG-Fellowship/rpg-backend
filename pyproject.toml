@@ -1,0 +1,20 @@
+[project]
+name = "rpg-backend"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "neontology",
+    "pydantic-settings",
+    "python-dotenv",
+]
+
+[tool.uv]
+package = false
+
+[tool.pyright]
+reportMissingTypeStubs = false
+
+[tool.mypy]
+ignore_missing_imports = true
