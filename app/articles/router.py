@@ -1,8 +1,9 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
+from fastapi.responses import Response
 
-from app.articles.schemas import ArticleCreateSchema, ArticleSchema, ArticleSummarySchema, ArticleWriteSchema
+from app.articles.schemas import ArticleContentSchema, ArticleCreateSchema, ArticleSchema, ArticleSummarySchema, ArticleWriteSchema
 from app.articles.service import ArticleService
 
 router = APIRouter()
@@ -11,7 +12,26 @@ service = ArticleService()
 
 @router.get("/{category_name}", response_model=List[ArticleSummarySchema])
 def list_articles(category_name: str):
-    articles = service.list(category=category_name)
+    return service.list(category=category_name)
+
+
+@router.get("/{article_id}/document")
+def get_article_document(article_id: str):
+    binary = service.get_document(article_id)
+    if binary is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No stored document")
+    return Response(content=binary, media_type="application/octet-stream")
+
+
+@router.put("/{article_id}/document", status_code=status.HTTP_204_NO_CONTENT)
+async def store_article_document(article_id: str, request: Request):
+    binary = await request.body()
+    service.store_document(article_id, binary)
+
+
+@router.get("/{article_id}/content", response_model=ArticleContentSchema)
+def get_article_content(article_id: str):
+    return service.get_content(article_id)
 
 
 @router.get("/{article_id}", response_model=ArticleSchema)

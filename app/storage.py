@@ -1,8 +1,9 @@
-import base64
+import json
 import logging
 
 import boto3
 import certifi
+from botocore.exceptions import ClientError
 
 from app.config import settings
 
@@ -28,25 +29,62 @@ def get_s3():
     return _client
 
 
-def store_article(article_id: str, content_json: str, ydoc_state_b64: str) -> str:
+def store_article_content(article_id: str, content_json: str) -> str:
     content_key = f"articles/{article_id}"
 
     if not _s3_configured():
-        logger.warning("S3 not configured, skipping upload for %s", article_id)
+        logger.warning("S3 not configured, skipping content upload for %s", article_id)
         return content_key
 
-    s3 = get_s3()
-    s3.put_object(
+    get_s3().put_object(
         Bucket=settings.S3_BUCKET,
         Key=f"{content_key}/content.json",
         Body=content_json.encode(),
         ContentType="application/json",
     )
-    s3.put_object(
+
+    return content_key
+
+
+def store_document(article_id: str, binary: bytes) -> None:
+    if not _s3_configured():
+        logger.warning("S3 not configured, skipping document upload for %s", article_id)
+        return
+
+    get_s3().put_object(
         Bucket=settings.S3_BUCKET,
-        Key=f"{content_key}/document.bin",
-        Body=base64.b64decode(ydoc_state_b64),
+        Key=f"articles/{article_id}/document.bin",
+        Body=binary,
         ContentType="application/octet-stream",
     )
 
-    return content_key
+
+def load_article_content(article_id: str) -> dict | None:
+    if not _s3_configured():
+        return None
+    try:
+        response = get_s3().get_object(
+            Bucket=settings.S3_BUCKET,
+            Key=f"articles/{article_id}/content.json",
+        )
+        return json.loads(response["Body"].read())
+    except ClientError as e:
+        if e.response["Error"]["Code"] in ("NoSuchKey", "404"):
+            return None
+        raise
+
+
+def load_article_document(article_id: str) -> bytes | None:
+    if not _s3_configured():
+        return None
+    s3 = get_s3()
+    try:
+        response = s3.get_object(
+            Bucket=settings.S3_BUCKET,
+            Key=f"articles/{article_id}/document.bin",
+        )
+        return response["Body"].read()
+    except ClientError as e:
+        if e.response["Error"]["Code"] in ("NoSuchKey", "404"):
+            return None
+        raise

@@ -19,7 +19,11 @@ class ArticleCreateSchema(BaseModel):
     category: str
 
 
+class ArticleContentSchema(BaseModel):
+    title: str
+    content: Optional[dict] = None
+
+
 class ArticleWriteSchema(BaseModel):
     title: str
     content: str
-    ydoc_state: Optional[str] = None
