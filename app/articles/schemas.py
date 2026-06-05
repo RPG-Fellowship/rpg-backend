@@ -11,7 +11,7 @@ class ArticleSummarySchema(BaseModel):
 class ArticleSchema(BaseModel):
     id: str
     title: str
-    content: Optional[str]
+    content_key: Optional[str]
     references: List[ArticleSummarySchema]
 
 
@@ -22,3 +22,4 @@ class ArticleCreateSchema(BaseModel):
 class ArticleWriteSchema(BaseModel):
     title: str
     content: str
+    ydoc_state: Optional[str] = None

@@ -8,6 +8,8 @@ dependencies = [
     "neontology",
     "pydantic-settings",
     "python-dotenv",
+    "boto3",
+    "certifi",
 ]
 
 [tool.uv]

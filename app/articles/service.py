@@ -2,9 +2,10 @@ from typing import List, Optional
 
 from app.articles.schemas import ArticleCreateSchema, ArticleSchema, ArticleSummarySchema, ArticleWriteSchema
 from app.articles.model import ArticleNode
-from app.articles.exceptions import ArticleNotFoundException    
+from app.articles.exceptions import ArticleNotFoundException
 from app.categories.model import CategoryNode
 from app.categories.relationships import ContainsArticleRelationship
+from app.storage import store_article
 
 
 class ArticleService:
@@ -28,25 +29,21 @@ class ArticleService:
         if len(category) == 0 or len(category) > 1:
             raise ValueError("Category not found or multiple categories with the same name exist")
         category = category[0]
-        article = ArticleNode(title="untitled", content="")
+        article = ArticleNode(title="untitled")
         article.create()
         rel = ContainsArticleRelationship(source=category, target=article)
         rel.merge()
 
         return article.article_id
 
-    def update(self, article_id: str, dto: ArticleWriteSchema) -> Optional[ArticleSchema]:
+    def update(self, article_id: str, dto: ArticleWriteSchema) -> None:
         article = ArticleNode.match(article_id)
-        if article:
-            updated = article.model_copy(
-                update={
-                    "title": dto.title,
-                    "content": dto.content
-                }
-            )
-            updated.merge()
-        else:
+        if not article:
             raise ArticleNotFoundException()
+        content_key = None
+        if dto.ydoc_state:
+            content_key = store_article(article_id, dto.content, dto.ydoc_state)
+            article.model_copy(update={"title": dto.title, "content_key": content_key}).merge()
             
     def delete(self, article_id: str) -> None:
         pass

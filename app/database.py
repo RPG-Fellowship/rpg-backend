@@ -1,4 +1,4 @@
-from neontology import init_neontology # type: ignore[import]
+from neontology import init_neontology
 
 from app.config import settings
 

@@ -27,9 +27,9 @@ def create_article(body: ArticleCreateSchema):
     else:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create article")
 
-@router.put("/{article_id}", response_model=ArticleSchema)
+@router.put("/{article_id}", status_code=status.HTTP_204_NO_CONTENT)
 def update_article(article_id: str, body: ArticleWriteSchema):
-    pass
+    service.update(article_id, body)
 
 
 @router.delete("/{article_id}", status_code=status.HTTP_204_NO_CONTENT)
