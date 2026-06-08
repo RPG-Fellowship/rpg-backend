@@ -2,6 +2,7 @@ import json
 import logging
 
 import boto3
+from botocore.config import Config
 import certifi
 from botocore.exceptions import ClientError
 
@@ -26,13 +27,19 @@ class S3ClientProvider:
     @classmethod
     def get_client(cls):
         if cls._client is None and cls._s3_configured():
+            config = Config(
+                retries={
+                    "max_attempts": 5,
+                    "mode": "standard"
+                }
+            )
             cls._client = boto3.client(
                 "s3",
                 region_name=settings.S3_REGION,
                 aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
                 aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
                 verify=certifi.where(),
-                retries={"max_attempts": 5, "mode": "standard"},
+                config=config
             )
         return cls._client
     
