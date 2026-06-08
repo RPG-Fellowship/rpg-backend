@@ -87,32 +87,49 @@ class S3ClientProvider:
     def load_article_json(cls, article_id: str) -> dict | None:
         if not cls._s3_configured():
             return None
-        try:
-            client = cls.get_client()
-            if client:
+        client = cls.get_client()
+        if client:
+            try:
                 response = client.get_object(
                     Bucket=settings.S3_BUCKET,
                     Key=f"articles/{article_id}/content.json",
                 )
                 return json.loads(response["Body"].read())
-        except ClientError as e:
-            if e.response["Error"]["Code"] in ("NoSuchKey", "404"):
-                return None
-            raise
+            except ClientError as e:
+                if e.response["Error"]["Code"] in ("NoSuchKey", "404"):
+                    return None
+                try:
+                    # if the error is not a missing key, try again to mitigate the ssl error
+                    response = client.get_object(
+                        Bucket=settings.S3_BUCKET,
+                        Key=f"articles/{article_id}/content.json",
+                    )
+                    return json.loads(response["Body"].read())
+                except ClientError as e:
+                    raise
 
     @classmethod
     def load_article_bin(cls, article_id: str) -> bytes | None:
         if not cls._s3_configured():
             return None
-        try:
-            client = cls.get_client()
-            if client:
-                response = client.get_object(
-                    Bucket=settings.S3_BUCKET,
-                    Key=f"articles/{article_id}/document.bin",
-                )
-                return response["Body"].read()
-        except ClientError as e:
-            if e.response["Error"]["Code"] in ("NoSuchKey", "404"):
-                return None
-            raise
+        client = cls.get_client()
+        if client:
+            try:
+                
+                    response = client.get_object(
+                        Bucket=settings.S3_BUCKET,
+                        Key=f"articles/{article_id}/document.bin",
+                    )
+                    return response["Body"].read()
+            except ClientError as e:
+                if e.response["Error"]["Code"] in ("NoSuchKey", "404"):
+                    return None
+                try:
+                    # if the error is not a missing key, try again to mitigate the ssl error
+                    response = client.get_object(
+                        Bucket=settings.S3_BUCKET,
+                        Key=f"articles/{article_id}/document.bin",
+                    )
+                    return response["Body"].read()
+                except ClientError as e:
+                    raise
