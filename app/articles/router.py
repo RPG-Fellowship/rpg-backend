@@ -1,6 +1,6 @@
-from typing import List, Optional
+from typing import List
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Query, Request, status
 from fastapi.responses import Response
 
 from app.articles.schemas import ArticleContentSchema, ArticleCreateSchema, ArticleSchema, ArticleSummarySchema, ArticleWriteSchema
@@ -8,6 +8,11 @@ from app.articles.service import ArticleService
 
 router = APIRouter()
 service = ArticleService()
+
+
+@router.get("/search", response_model=List[ArticleSummarySchema])
+def search_articles(q: str = Query(default="")):
+    return service.search(q)
 
 
 @router.get("/{category_name}", response_model=List[ArticleSummarySchema])
@@ -34,6 +39,11 @@ def get_article_content(article_id: str):
     return service.get_content(article_id)
 
 
+@router.get("/{article_id}/references", response_model=List[ArticleSummarySchema])
+def get_article_references(article_id: str):
+    return service.get_references(article_id)
+
+
 @router.get("/{article_id}", response_model=ArticleSchema)
 def get_article(article_id: str):
     pass
@@ -46,6 +56,7 @@ def create_article(body: ArticleCreateSchema):
         return {"id": article_id}
     else:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create article")
+
 
 @router.put("/{article_id}", status_code=status.HTTP_204_NO_CONTENT)
 def update_article(article_id: str, body: ArticleWriteSchema):
