@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from neontology import GraphConnection
 
-from app.articles.schemas import ArticleContentSchema, ArticleCreateSchema, ArticleSchema, ArticleSummarySchema, ArticleWriteSchema
+from app.articles.schemas import ArticleContentSchema, ArticleCreateSchema, ArticleSchema, ArticleSummarySchema, ArticleWriteSchema, GraphNodeSchema, GraphEdgeSchema, GraphSchema
 from app.articles.model import ArticleNode
 from app.articles.exceptions import ArticleNotFoundException
 from app.articles.relationships import ReferencesRelationship
@@ -144,6 +144,31 @@ class ArticleService:
                 self._sync_mentions(article_id, mention_ids)
             except (json.JSONDecodeError, KeyError):
                 pass
+
+    def get_graph(self) -> GraphSchema:
+        gc = GraphConnection()
+        articles_result = gc.evaluate_query("MATCH (a:Article) RETURN a")
+        articles = [n for n in articles_result.nodes if isinstance(n, ArticleNode)]
+
+        edges_result = gc.evaluate_query(
+            "MATCH (a:Article)-[r:REFERENCES]->(b:Article) RETURN a, r, b"
+        )
+
+        relationships = [r for r in edges_result.relationships if isinstance(r, ReferencesRelationship)]
+        contains_result = gc.evaluate_query(
+        "MATCH (c:Category)-[r:CONTAINS_ARTICLE]->(a:Article) RETURN c, r, a"
+        )
+
+        category_map = {
+        rel.target.article_id: rel.source.name
+        for rel in contains_result.relationships
+        if isinstance(rel, ContainsArticleRelationship)
+        }
+
+        nodes = [GraphNodeSchema(id=a.article_id, title=a.title, category=category_map.get(a.article_id)) for a in articles]
+        edges = [GraphEdgeSchema(source=r.source.article_id, target=r.target.article_id) for r in relationships]
+
+        return GraphSchema(nodes=nodes, edges=edges)
 
     def _extract_mention_ids(self, node: dict) -> List[str]:
         """Recursively extract article IDs from mention nodes in a TipTap JSON document.

@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Query, Request, status
 from fastapi.responses import Response
 
-from app.articles.schemas import ArticleContentSchema, ArticleCreateSchema, ArticleSchema, ArticleSummarySchema, ArticleWriteSchema
+from app.articles.schemas import ArticleContentSchema, ArticleCreateSchema, ArticleSchema, ArticleSummarySchema, ArticleWriteSchema, GraphSchema
 from app.articles.service import ArticleService
 
 router = APIRouter()
@@ -13,6 +13,11 @@ service = ArticleService()
 @router.get("/search", response_model=List[ArticleSummarySchema])
 def search_articles(q: str = Query(default="")):
     return service.search(q)
+
+
+@router.get("/graph", response_model=GraphSchema)
+def get_articles_graph():
+    return service.get_graph()
 
 
 @router.get("/{category_name}", response_model=List[ArticleSummarySchema])

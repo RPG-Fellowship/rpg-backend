@@ -27,3 +27,19 @@ class ArticleContentSchema(BaseModel):
 class ArticleWriteSchema(BaseModel):
     title: str
     content: str
+
+
+class GraphNodeSchema(BaseModel):
+    id: str
+    title: str
+    category: Optional[str] = None
+
+
+class GraphEdgeSchema(BaseModel):
+    source: str
+    target: str
+
+
+class GraphSchema(BaseModel):
+    nodes: List[GraphNodeSchema]
+    edges: List[GraphEdgeSchema]
