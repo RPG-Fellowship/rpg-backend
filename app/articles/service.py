@@ -9,7 +9,7 @@ from app.articles.exceptions import ArticleNotFoundException
 from app.articles.relationships import ReferencesRelationship
 from app.categories.model import CategoryNode
 from app.categories.relationships import ContainsArticleRelationship
-from app.storage import S3ClientProvider
+from app.core.storage import S3ClientProvider
 
 
 class ArticleService:
