@@ -1,6 +1,6 @@
 from neontology import init_neontology
 
-from app.config import settings
+from app.core.config import settings
 
 
 def connect_db() -> None:

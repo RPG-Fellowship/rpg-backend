@@ -3,9 +3,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import connect_db
+from app.core.database import connect_db
 from app.articles.router import router as articles_router
 from app.categories.router import router as categories_router
+from app.core.health import router as health_router
 from app.categories.model import CategoryNode
 
 CATEGORY_NAMES = ["characters", "locations", "items", "quests", "maps"]
@@ -38,9 +39,7 @@ app.add_middleware(
     max_age=3600,
 )
 
-def health_check() -> dict:
-    return {"status": "ok"}
-
 app.include_router(articles_router, prefix="/api/articles", tags=["articles"])
 app.include_router(categories_router, prefix="/api/categories", tags=["categories"])
-app.add_api_route("/health", health_check, methods=["GET"])
+app.include_router(health_router, prefix="/api/health", tags=["health"])
+
