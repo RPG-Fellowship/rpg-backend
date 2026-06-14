@@ -38,5 +38,9 @@ app.add_middleware(
     max_age=3600,
 )
 
+def health_check() -> dict:
+    return {"status": "ok"}
+
 app.include_router(articles_router, prefix="/api/articles", tags=["articles"])
 app.include_router(categories_router, prefix="/api/categories", tags=["categories"])
+app.add_api_route("/health", health_check, methods=["GET"])
